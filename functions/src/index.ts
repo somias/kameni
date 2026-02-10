@@ -20,15 +20,23 @@ interface PushSub {
   keys: { p256dh: string; auth: string };
 }
 
+let webPushInitialized = false;
 function initWebPush() {
+  if (webPushInitialized) return;
   webpush.setVapidDetails(
     "mailto:admin@kamenko.web.app",
     VAPID_PUBLIC_KEY,
     vapidPrivateKey.value()
   );
+  webPushInitialized = true;
 }
 
-async function sendPush(subscriptions: PushSub[], title: string, body: string) {
+async function sendPush(
+  subscriptions: PushSub[],
+  title: string,
+  body: string,
+  userSubMap?: Map<string, PushSub[]>
+) {
   if (subscriptions.length === 0) return;
 
   initWebPush();
@@ -50,6 +58,34 @@ async function sendPush(subscriptions: PushSub[], title: string, body: string) {
   const success = results.filter((r) => r.status === "fulfilled").length;
   const failed = results.filter((r) => r.status === "rejected").length;
   console.log(`Push sent: ${success} success, ${failed} failure`);
+
+  // Clean up stale subscriptions (410 Gone or 404 Not Found)
+  if (userSubMap) {
+    const staleEndpoints = new Set<string>();
+    results.forEach((result, index) => {
+      if (
+        result.status === "rejected" &&
+        result.reason?.statusCode &&
+        (result.reason.statusCode === 410 || result.reason.statusCode === 404)
+      ) {
+        staleEndpoints.add(subscriptions[index].endpoint);
+      }
+    });
+
+    if (staleEndpoints.size > 0) {
+      console.log(`Removing ${staleEndpoints.size} stale push subscriptions`);
+      for (const [userId, userSubs] of userSubMap) {
+        const validSubs = userSubs.filter(
+          (sub) => !staleEndpoints.has(sub.endpoint)
+        );
+        if (validSubs.length < userSubs.length) {
+          await db.collection("users").doc(userId).update({
+            pushSubscriptions: validSubs,
+          });
+        }
+      }
+    }
+  }
 }
 
 // Trigger: When a session status changes to 'cancelled'
@@ -76,6 +112,7 @@ export const onSessionCancelled = onDocumentUpdated(
     if (bookingsSnap.empty) return;
 
     const subscriptions: PushSub[] = [];
+    const userSubMap = new Map<string, PushSub[]>();
     for (const bookingDoc of bookingsSnap.docs) {
       const userId = bookingDoc.data().userId;
       const userSnap = await db.collection("users").doc(userId).get();
@@ -85,6 +122,7 @@ export const onSessionCancelled = onDocumentUpdated(
         userData?.pushSubscriptions?.length > 0
       ) {
         subscriptions.push(...userData.pushSubscriptions);
+        userSubMap.set(userId, userData.pushSubscriptions);
       }
     }
 
@@ -95,7 +133,8 @@ export const onSessionCancelled = onDocumentUpdated(
     await sendPush(
       subscriptions,
       "Session Cancelled",
-      `The ${startTime} session on ${date} has been cancelled.${cancelNote}`
+      `The ${startTime} session on ${date} has been cancelled.${cancelNote}`,
+      userSubMap
     );
   }
 );
@@ -118,15 +157,17 @@ export const onAnnouncementCreated = onDocumentWritten(
       .get();
 
     const subscriptions: PushSub[] = [];
+    const userSubMap = new Map<string, PushSub[]>();
     for (const userDoc of usersSnap.docs) {
       if (userDoc.id === postedByUid) continue;
       const userData = userDoc.data();
       if (userData.pushSubscriptions?.length > 0) {
         subscriptions.push(...userData.pushSubscriptions);
+        userSubMap.set(userDoc.id, userData.pushSubscriptions);
       }
     }
 
-    await sendPush(subscriptions, "New Announcement", after.message);
+    await sendPush(subscriptions, "New Announcement", after.message, userSubMap);
   }
 );
 
@@ -171,7 +212,9 @@ export const onBookingCreated = onDocumentCreated(
         coachData.notificationsEnabled &&
         coachData.pushSubscriptions?.length > 0
       ) {
-        await sendPush(coachData.pushSubscriptions, title, message);
+        const coachSubMap = new Map<string, PushSub[]>();
+        coachSubMap.set(coachDoc.id, coachData.pushSubscriptions);
+        await sendPush(coachData.pushSubscriptions, title, message, coachSubMap);
       }
     }
   }
@@ -221,7 +264,9 @@ export const onBookingCancelled = onDocumentUpdated(
         coachData.notificationsEnabled &&
         coachData.pushSubscriptions?.length > 0
       ) {
-        await sendPush(coachData.pushSubscriptions, title, message);
+        const coachSubMap = new Map<string, PushSub[]>();
+        coachSubMap.set(coachDoc.id, coachData.pushSubscriptions);
+        await sendPush(coachData.pushSubscriptions, title, message, coachSubMap);
       }
     }
   }
@@ -275,10 +320,13 @@ export const onBookingReminder = onSchedule(
           userData?.notificationsEnabled &&
           userData?.pushSubscriptions?.length > 0
         ) {
+          const reminderSubMap = new Map<string, PushSub[]>();
+          reminderSubMap.set(userId, userData.pushSubscriptions);
           await sendPush(
             userData.pushSubscriptions,
             "Session Today",
-            `Your ${sessionData.startTime} boxing cardio session is today!`
+            `Your ${sessionData.startTime} boxing cardio session is today!`,
+            reminderSubMap
           );
         }
       }

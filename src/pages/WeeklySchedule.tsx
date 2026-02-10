@@ -6,6 +6,7 @@ import {
   getDocs,
   doc,
   getDoc,
+  onSnapshot,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
@@ -37,75 +38,80 @@ export default function WeeklySchedule() {
 
   const weekDates = getWeekDates(weekStart);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      // Fetch slots
-      const slotsSnap = await getDocs(collection(db, 'slots'));
-      const slots = slotsSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Slot));
-
-      // Generate sessions for the week
-      await generateSessionsForWeek(slots, weekStart);
-
-      // Fetch sessions for the week
-      const startDate = toISODate(weekDates[0]);
-      const endDate = toISODate(weekDates[6]);
-      const sessionsQuery = query(
-        collection(db, 'sessions'),
-        where('date', '>=', startDate),
-        where('date', '<=', endDate)
-      );
-      const sessionsSnap = await getDocs(sessionsQuery);
-      const sessionsData = sessionsSnap.docs.map(
-        (d) => ({ id: d.id, ...d.data() } as Session)
-      );
-      setSessions(sessionsData);
-
-      // Fetch user bookings for these sessions
-      if (user) {
-        const bookingsMap: Record<string, Booking> = {};
-        for (const session of sessionsData) {
-          const bookingId = `${user.uid}_${session.id}`;
-          const bookingSnap = await getDoc(doc(db, 'bookings', bookingId));
-          if (bookingSnap.exists()) {
-            const b = { id: bookingSnap.id, ...bookingSnap.data() } as Booking;
-            if (b.status === 'confirmed') {
-              bookingsMap[session.id] = b;
-            }
-          }
+  const loadUserBookings = useCallback(async (sessionsData: Session[]) => {
+    if (!user) return;
+    const bookingsMap: Record<string, Booking> = {};
+    for (const session of sessionsData) {
+      const bookingId = `${user.uid}_${session.id}`;
+      const bookingSnap = await getDoc(doc(db, 'bookings', bookingId));
+      if (bookingSnap.exists()) {
+        const b = { id: bookingSnap.id, ...bookingSnap.data() } as Booking;
+        if (b.status === 'confirmed') {
+          bookingsMap[session.id] = b;
         }
-        setBookings(bookingsMap);
       }
-
-      // Fetch announcement
-      const announcementSnap = await getDoc(doc(db, 'announcements', 'current'));
-      if (announcementSnap.exists() && announcementSnap.data().message) {
-        setAnnouncement(announcementSnap.data() as Announcement);
-      } else {
-        setAnnouncement(null);
-      }
-    } catch (err) {
-      console.error('Error loading schedule:', err);
-    } finally {
-      setLoading(false);
     }
-  }, [weekStart, user]);
+    setBookings(bookingsMap);
+  }, [user]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    let unsubscribe: (() => void) | undefined;
+
+    const init = async () => {
+      setLoading(true);
+      try {
+        // Fetch slots and generate sessions
+        const slotsSnap = await getDocs(collection(db, 'slots'));
+        const slots = slotsSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Slot));
+        await generateSessionsForWeek(slots, weekStart);
+
+        // Real-time listener for sessions
+        const startDate = toISODate(weekDates[0]);
+        const endDate = toISODate(weekDates[6]);
+        const sessionsQuery = query(
+          collection(db, 'sessions'),
+          where('date', '>=', startDate),
+          where('date', '<=', endDate)
+        );
+
+        unsubscribe = onSnapshot(sessionsQuery, async (snap) => {
+          const sessionsData = snap.docs.map(
+            (d) => ({ id: d.id, ...d.data() } as Session)
+          );
+          setSessions(sessionsData);
+          await loadUserBookings(sessionsData);
+          setLoading(false);
+        });
+
+        // Fetch announcement
+        const announcementSnap = await getDoc(doc(db, 'announcements', 'current'));
+        if (announcementSnap.exists() && announcementSnap.data().message) {
+          setAnnouncement(announcementSnap.data() as Announcement);
+        } else {
+          setAnnouncement(null);
+        }
+      } catch (err) {
+        console.error('Error loading schedule:', err);
+        setLoading(false);
+      }
+    };
+
+    init();
+    return () => unsubscribe?.();
+  }, [weekStart, user, loadUserBookings]);
 
   const handleBook = async (session: Session) => {
     setBookingInProgress(session.id);
     await bookSession(session);
-    await loadData();
+    await loadUserBookings(sessions);
     setBookingInProgress(null);
   };
 
   const handleCancel = async (booking: Booking) => {
+    if (!window.confirm('Cancel this booking?')) return;
     setBookingInProgress(booking.sessionId);
     await cancelBooking(booking);
-    await loadData();
+    await loadUserBookings(sessions);
     setBookingInProgress(null);
   };
 
@@ -144,10 +150,10 @@ export default function WeeklySchedule() {
 
       {/* Announcement banner */}
       {announcement && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+        <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-4">
           <div className="flex items-start gap-2">
-            <span className="text-red-600 font-medium text-sm shrink-0">📢</span>
-            <p className="text-sm text-red-800">{announcement.message}</p>
+            <span className="text-red-600 dark:text-red-500 font-medium text-sm shrink-0">📢</span>
+            <p className="text-sm text-red-800 dark:text-red-300">{announcement.message}</p>
           </div>
         </div>
       )}
@@ -156,7 +162,7 @@ export default function WeeklySchedule() {
       <div className="flex items-center justify-between mb-6">
         <button
           onClick={prevWeek}
-          className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
           aria-label="Previous week"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -165,13 +171,13 @@ export default function WeeklySchedule() {
         </button>
 
         <div className="text-center">
-          <h1 className="text-lg font-semibold text-gray-900">
+          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             {formatDate(toISODate(weekDates[0]))} – {formatDate(toISODate(weekDates[6]))}
           </h1>
           {!isCurrentWeek && (
             <button
               onClick={thisWeek}
-              className="text-xs text-red-600 hover:underline mt-0.5"
+              className="text-xs text-red-600 dark:text-red-500 hover:underline mt-0.5"
             >
               Back to this week
             </button>
@@ -180,7 +186,7 @@ export default function WeeklySchedule() {
 
         <button
           onClick={nextWeek}
-          className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
           aria-label="Next week"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -192,7 +198,7 @@ export default function WeeklySchedule() {
       {loading ? (
         <LoadingSkeleton count={4} />
       ) : sessions.length === 0 ? (
-        <div className="text-center py-12 text-gray-400">
+        <div className="text-center py-12 text-gray-400 dark:text-gray-500">
           <p className="text-lg font-medium">No sessions this week</p>
           <p className="text-sm mt-1">Check back later or try another week</p>
         </div>
@@ -205,7 +211,7 @@ export default function WeeklySchedule() {
 
             return (
               <div key={dateStr}>
-                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
                   {dayNames[date.getDay()]} · {formatDate(dateStr)}
                 </h2>
                 <div className="space-y-2">
@@ -221,39 +227,39 @@ export default function WeeklySchedule() {
                     return (
                       <div
                         key={session.id}
-                        className={`bg-white rounded-xl border p-4 transition-all ${
+                        className={`bg-white dark:bg-gray-900 rounded-xl border p-4 transition-all ${
                           isCancelled || isPast
-                            ? 'border-gray-200 opacity-60'
-                            : 'border-gray-200 hover:border-gray-300'
+                            ? 'border-gray-200 dark:border-gray-700 opacity-60'
+                            : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                         }`}
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="font-semibold text-gray-900">
+                            <p className="font-semibold text-gray-900 dark:text-gray-100">
                               {formatTime(session.startTime)} – {formatTime(session.endTime)}
                             </p>
-                            <p className="text-sm text-gray-500">{session.location}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{session.location}</p>
                           </div>
 
                           <div className="text-right">
                             {isCancelled ? (
-                              <span className="inline-block px-3 py-1 text-xs font-medium bg-gray-100 text-gray-500 rounded-full">
+                              <span className="inline-block px-3 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-full">
                                 Cancelled
                               </span>
                             ) : isPast ? (
-                              <span className="inline-block px-3 py-1 text-xs font-medium bg-gray-100 text-gray-500 rounded-full">
+                              <span className="inline-block px-3 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-full">
                                 Past
                               </span>
                             ) : isCoach ? null : booking ? (
                               <button
                                 onClick={() => handleCancel(booking)}
                                 disabled={isProcessing}
-                                className="px-4 py-1.5 text-sm font-medium border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50"
+                                className="px-4 py-1.5 text-sm font-medium border border-red-200 dark:border-red-800 text-red-600 dark:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-colors disabled:opacity-50"
                               >
                                 {isProcessing ? '...' : 'Cancel'}
                               </button>
                             ) : isFull ? (
-                              <span className="inline-block px-3 py-1 text-xs font-medium bg-gray-100 text-gray-500 rounded-full">
+                              <span className="inline-block px-3 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-full">
                                 Full
                               </span>
                             ) : (
@@ -271,11 +277,11 @@ export default function WeeklySchedule() {
                         {/* Spots progress bar */}
                         {!isCancelled && (
                           <div className="mt-3">
-                            <div className="flex justify-between text-xs text-gray-500 mb-1">
+                            <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
                               <span>{session.bookingCount} / {session.maxCapacity} booked</span>
                               <span>{spotsLeft} spot{spotsLeft !== 1 ? 's' : ''} left</span>
                             </div>
-                            <div className="w-full bg-gray-100 rounded-full h-1.5">
+                            <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5">
                               <div
                                 className={`h-1.5 rounded-full transition-all ${
                                   fillPercent >= 80

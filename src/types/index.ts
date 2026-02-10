@@ -55,7 +55,7 @@ export interface Booking {
 export interface Notification {
   id: string;
   userId: string; // specific user ID or 'all' for broadcast
-  type: 'booking_confirmed' | 'booking_cancelled' | 'session_cancelled' | 'announcement' | 'reminder' | 'spot_available';
+  type: 'booking_confirmed' | 'booking_cancelled' | 'session_cancelled' | 'session_time_changed' | 'announcement' | 'reminder' | 'spot_available';
   title: string;
   message: string;
   read: boolean;

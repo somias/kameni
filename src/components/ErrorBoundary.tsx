@@ -18,10 +18,10 @@ export default class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 px-4">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Something went wrong</h1>
-            <p className="text-gray-500 mb-4">An unexpected error occurred.</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Something went wrong</h1>
+            <p className="text-gray-500 dark:text-gray-400 mb-4">An unexpected error occurred.</p>
             <button
               onClick={() => {
                 this.setState({ hasError: false });

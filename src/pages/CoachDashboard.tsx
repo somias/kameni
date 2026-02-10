@@ -66,16 +66,22 @@ export default function CoachDashboard() {
         .sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
       setSessions(sessionsData);
 
-      // Fetch bookings for all sessions
+      // Fetch bookings for all sessions in batches
       const bMap: Record<string, Booking[]> = {};
-      for (const session of sessionsData) {
+      const sessionIds = sessionsData.map((s) => s.id);
+      for (let i = 0; i < sessionIds.length; i += 30) {
+        const batch = sessionIds.slice(i, i + 30);
         const bQuery = query(
           collection(db, 'bookings'),
-          where('sessionId', '==', session.id),
+          where('sessionId', 'in', batch),
           where('status', '==', 'confirmed')
         );
         const bSnap = await getDocs(bQuery);
-        bMap[session.id] = bSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Booking));
+        for (const d of bSnap.docs) {
+          const booking = { id: d.id, ...d.data() } as Booking;
+          if (!bMap[booking.sessionId]) bMap[booking.sessionId] = [];
+          bMap[booking.sessionId].push(booking);
+        }
       }
       setBookingsMap(bMap);
 
@@ -146,7 +152,7 @@ export default function CoachDashboard() {
       for (const booking of sessionBookings) {
         await addDoc(collection(db, 'notifications'), {
           userId: booking.userId,
-          type: 'session_cancelled',
+          type: 'session_time_changed',
           title: 'Session Time Changed',
           message: `The session on ${formatDate(editTimeSession.date)} has been moved to ${formatTime(editStartTime)} – ${formatTime(editEndTime)}.`,
           read: false,
@@ -217,36 +223,36 @@ export default function CoachDashboard() {
   };
 
   const getSessionColor = (session: Session) => {
-    if (session.status === 'cancelled') return 'border-gray-300 bg-gray-50';
+    if (session.status === 'cancelled') return 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800';
     const pct = (session.bookingCount / session.maxCapacity) * 100;
-    if (pct >= 80) return 'border-red-200 bg-red-50/30';
-    if (pct >= 50) return 'border-yellow-200 bg-yellow-50/30';
-    return 'border-green-200 bg-green-50/30';
+    if (pct >= 80) return 'border-red-200 dark:border-red-800 bg-red-50/30 dark:bg-red-950/30';
+    if (pct >= 50) return 'border-yellow-200 dark:border-yellow-800 bg-yellow-50/30 dark:bg-yellow-950/30';
+    return 'border-green-200 dark:border-green-800 bg-green-50/30 dark:bg-green-950/30';
   };
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-gray-900">Coach Dashboard</h1>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Coach Dashboard</h1>
         <Link
           to="/coach/slots"
-          className="text-sm text-red-600 hover:underline font-medium"
+          className="text-sm text-red-600 dark:text-red-500 hover:underline font-medium"
         >
           Manage Slots
         </Link>
       </div>
 
       {/* Announcement section */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
-        <h2 className="text-sm font-semibold text-gray-700 mb-2">Announcements</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6">
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Announcements</h2>
         {currentAnnouncement && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
-            <p className="text-sm text-red-800">{currentAnnouncement.message}</p>
+          <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-3">
+            <p className="text-sm text-red-800 dark:text-red-300">{currentAnnouncement.message}</p>
             <div className="flex items-center justify-between mt-2">
               <p className="text-xs text-red-500">By {currentAnnouncement.postedBy}</p>
               <button
                 onClick={handleClearAnnouncement}
-                className="text-xs text-red-600 hover:underline"
+                className="text-xs text-red-600 dark:text-red-500 hover:underline"
               >
                 Clear
               </button>
@@ -259,7 +265,7 @@ export default function CoachDashboard() {
             value={announcement}
             onChange={(e) => setAnnouncement(e.target.value)}
             placeholder="Type an announcement..."
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
           <button
             onClick={handlePostAnnouncement}
@@ -273,15 +279,15 @@ export default function CoachDashboard() {
 
       {/* Week navigation */}
       <div className="flex items-center justify-between mb-4">
-        <button onClick={prevWeek} className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+        <button onClick={prevWeek} className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
         </button>
-        <h2 className="text-sm font-semibold text-gray-600">
+        <h2 className="text-sm font-semibold text-gray-600 dark:text-gray-400">
           {formatDate(toISODate(weekDates[0]))} – {formatDate(toISODate(weekDates[6]))}
         </h2>
-        <button onClick={nextWeek} className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+        <button onClick={nextWeek} className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
           </svg>
@@ -291,10 +297,10 @@ export default function CoachDashboard() {
       {loading ? (
         <LoadingSkeleton count={4} />
       ) : sessions.length === 0 ? (
-        <div className="text-center py-12 text-gray-400">
+        <div className="text-center py-12 text-gray-400 dark:text-gray-500">
           <p className="text-lg font-medium">No sessions this week</p>
           <p className="text-sm mt-1">
-            <Link to="/coach/slots" className="text-red-600 hover:underline">Create slots</Link> first
+            <Link to="/coach/slots" className="text-red-600 dark:text-red-500 hover:underline">Create slots</Link> first
           </p>
         </div>
       ) : (
@@ -313,24 +319,24 @@ export default function CoachDashboard() {
                   onClick={() => setExpandedSession(isExpanded ? null : session.id)}
                 >
                   <div>
-                    <p className="text-xs text-gray-500 uppercase font-semibold">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">
                       {dayNames[new Date(session.date + 'T00:00:00').getDay()]} · {formatDate(session.date)}
                     </p>
-                    <p className="font-semibold text-gray-900">
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">
                       {formatTime(session.startTime)} – {formatTime(session.endTime)}
                     </p>
                   </div>
                   <div className="text-right flex items-center gap-3">
                     <div>
-                      <p className="text-lg font-bold text-gray-900">
+                      <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
                         {session.bookingCount}/{session.maxCapacity}
                       </p>
                       {session.status === 'cancelled' && (
-                        <span className="text-xs text-gray-500">Cancelled</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Cancelled</span>
                       )}
                     </div>
                     <svg
-                      className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                      className={`w-5 h-5 text-gray-400 dark:text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                       fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
@@ -339,13 +345,13 @@ export default function CoachDashboard() {
                 </div>
 
                 {isExpanded && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                     {/* Attendee list */}
                     {sessionBookings.length === 0 ? (
-                      <p className="text-sm text-gray-400">No bookings yet</p>
+                      <p className="text-sm text-gray-400 dark:text-gray-500">No bookings yet</p>
                     ) : (
                       <div>
-                        <p className="text-xs font-semibold text-gray-500 uppercase mb-2">
+                        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">
                           Attendees ({sessionBookings.length})
                         </p>
                         <div className="space-y-1">
@@ -354,10 +360,10 @@ export default function CoachDashboard() {
                               key={booking.id}
                               className="flex items-center gap-2 py-1"
                             >
-                              <span className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium text-gray-600">
+                              <span className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center text-xs font-medium text-gray-600 dark:text-gray-400">
                                 {booking.userName.charAt(0).toUpperCase()}
                               </span>
-                              <span className="text-sm text-gray-700">{booking.userName}</span>
+                              <span className="text-sm text-gray-700 dark:text-gray-300">{booking.userName}</span>
                             </div>
                           ))}
                         </div>
@@ -371,7 +377,7 @@ export default function CoachDashboard() {
                             e.stopPropagation();
                             handleEditTime(session);
                           }}
-                          className="flex-1 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                          className="flex-1 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                         >
                           Edit Time
                         </button>
@@ -380,7 +386,7 @@ export default function CoachDashboard() {
                             e.stopPropagation();
                             setCancelModal(session);
                           }}
-                          className="flex-1 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                          className="flex-1 py-2 text-sm font-medium text-red-600 dark:text-red-500 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
                         >
                           Cancel Session
                         </button>
@@ -397,9 +403,9 @@ export default function CoachDashboard() {
       {/* Cancel modal */}
       {cancelModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-sm">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Cancel Session</h3>
-            <p className="text-sm text-gray-500 mb-4">
+          <div className="bg-white dark:bg-gray-900 rounded-xl p-6 w-full max-w-sm">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Cancel Session</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
               Cancel the {formatTime(cancelModal.startTime)} session on {formatDate(cancelModal.date)}?
               Booked members will be notified.
             </p>
@@ -407,13 +413,13 @@ export default function CoachDashboard() {
               value={cancelNote}
               onChange={(e) => setCancelNote(e.target.value)}
               placeholder="Reason (optional)"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent mb-4"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent mb-4"
               rows={3}
             />
             <div className="flex gap-2">
               <button
                 onClick={() => { setCancelModal(null); setCancelNote(''); }}
-                className="flex-1 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex-1 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
                 Keep
               </button>
@@ -431,35 +437,35 @@ export default function CoachDashboard() {
       {/* Edit time modal */}
       {editTimeSession && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-sm">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Edit Session Time</h3>
-            <p className="text-sm text-gray-500 mb-4">
+          <div className="bg-white dark:bg-gray-900 rounded-xl p-6 w-full max-w-sm">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Edit Session Time</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
               Change time for {formatDate(editTimeSession.date)}. Booked members will be notified.
             </p>
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Start</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start</label>
                 <input
                   type="time"
                   value={editStartTime}
                   onChange={(e) => setEditStartTime(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">End</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End</label>
                 <input
                   type="time"
                   value={editEndTime}
                   onChange={(e) => setEditEndTime(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
               </div>
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => setEditTimeSession(null)}
-                className="flex-1 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex-1 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
                 Cancel
               </button>

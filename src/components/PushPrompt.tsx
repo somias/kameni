@@ -47,17 +47,17 @@ export default function PushPrompt() {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4 flex items-center gap-4">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-4 mb-4 flex items-center gap-4">
       <div className="flex-1">
-        <p className="font-medium text-gray-900 text-sm">Want notifications?</p>
-        <p className="text-xs text-gray-500 mt-0.5">
+        <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">Want notifications?</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
           Get reminders and updates about your bookings
         </p>
       </div>
       <div className="flex gap-2">
         <button
           onClick={handleDismiss}
-          className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+          className="px-3 py-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
         >
           Later
         </button>

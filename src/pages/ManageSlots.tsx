@@ -107,7 +107,7 @@ export default function ManageSlots() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-gray-900">Manage Slots</h1>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Manage Slots</h1>
         <button
           onClick={() => {
             setForm(defaultSlot);
@@ -122,18 +122,18 @@ export default function ManageSlots() {
 
       {/* Add/Edit form */}
       {showForm && (
-        <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6 space-y-4">
-          <h2 className="font-semibold text-gray-900">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6 space-y-4">
+          <h2 className="font-semibold text-gray-900 dark:text-gray-100">
             {editingId ? 'Edit Slot' : 'New Slot'}
           </h2>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Day</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Day</label>
               <select
                 value={form.dayOfWeek}
                 onChange={(e) => setForm({ ...form, dayOfWeek: Number(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500"
               >
                 {dayNames.map((name, i) => (
                   <option key={i} value={i}>{name}</option>
@@ -142,33 +142,33 @@ export default function ManageSlots() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Max Capacity</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Max Capacity</label>
               <input
                 type="number"
                 min={1}
                 value={form.maxCapacity}
                 onChange={(e) => setForm({ ...form, maxCapacity: Number(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Time</label>
               <input
                 type="time"
                 value={form.startTime}
                 onChange={(e) => setForm({ ...form, startTime: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Time</label>
               <input
                 type="time"
                 value={form.endTime}
                 onChange={(e) => setForm({ ...form, endTime: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500"
               />
             </div>
           </div>
@@ -186,14 +186,14 @@ export default function ManageSlots() {
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white rounded-xl border border-gray-200 p-4 animate-pulse">
-              <div className="h-4 bg-gray-200 rounded w-1/3 mb-2" />
-              <div className="h-3 bg-gray-200 rounded w-1/2" />
+            <div key={i} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 animate-pulse">
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-2" />
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
             </div>
           ))}
         </div>
       ) : slots.length === 0 ? (
-        <div className="text-center py-12 text-gray-400">
+        <div className="text-center py-12 text-gray-400 dark:text-gray-500">
           <p className="text-lg font-medium">No slots yet</p>
           <p className="text-sm mt-1">Add your first recurring time slot</p>
         </div>
@@ -205,29 +205,29 @@ export default function ManageSlots() {
 
             return (
               <div key={day}>
-                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
                   {dayNames[day]}
                 </h2>
                 <div className="space-y-2">
                   {daySlots.map((slot) => (
                     <div
                       key={slot.id}
-                      className={`bg-white rounded-xl border p-4 flex items-center justify-between ${
-                        slot.active ? 'border-gray-200' : 'border-gray-200 opacity-50'
+                      className={`bg-white dark:bg-gray-900 rounded-xl border p-4 flex items-center justify-between ${
+                        slot.active ? 'border-gray-200 dark:border-gray-700' : 'border-gray-200 dark:border-gray-700 opacity-50'
                       }`}
                     >
                       <div>
-                        <p className="font-semibold text-gray-900">
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">
                           {slot.startTime} – {slot.endTime}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
                           {slot.maxCapacity} spots
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleEdit(slot)}
-                          className="px-3 py-1 text-xs font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                          className="px-3 py-1 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                         >
                           Edit
                         </button>
@@ -235,8 +235,8 @@ export default function ManageSlots() {
                           onClick={() => handleToggleActive(slot)}
                           className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
                             slot.active
-                              ? 'text-red-600 border border-red-200 hover:bg-red-50'
-                              : 'text-green-600 border border-green-200 hover:bg-green-50'
+                              ? 'text-red-600 dark:text-red-500 border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950'
+                              : 'text-green-600 dark:text-green-500 border border-green-200 dark:border-green-800 hover:bg-green-50 dark:hover:bg-green-950'
                           }`}
                         >
                           {slot.active ? 'Deactivate' : 'Activate'}

@@ -30,7 +30,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const bgColor = {
     success: 'bg-green-600',
     error: 'bg-red-600',
-    info: 'bg-gray-800',
+    info: 'bg-gray-800 dark:bg-gray-700',
   };
 
   return (
