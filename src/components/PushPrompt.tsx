@@ -33,10 +33,10 @@ export default function PushPrompt() {
     if (!user) return;
     const success = await requestNotificationPermission(user.uid);
     if (success) {
-      addToast('Notifications enabled!', 'success');
+      addToast('Obavještenja uključena!', 'success');
       await refreshUser();
     } else {
-      addToast('Could not enable notifications', 'error');
+      addToast('Nije moguće uključiti obavještenja', 'error');
     }
     setShow(false);
   };
@@ -49,9 +49,9 @@ export default function PushPrompt() {
   return (
     <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-4 mb-4 flex items-center gap-4">
       <div className="flex-1">
-        <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">Want notifications?</p>
+        <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">Želite obavještenja?</p>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-          Get reminders and updates about your bookings
+          Primajte podsjetnike i ažuriranja o vašim rezervacijama
         </p>
       </div>
       <div className="flex gap-2">
@@ -59,13 +59,13 @@ export default function PushPrompt() {
           onClick={handleDismiss}
           className="px-3 py-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
         >
-          Later
+          Kasnije
         </button>
         <button
           onClick={handleEnable}
           className="px-3 py-1.5 text-xs font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
         >
-          Enable
+          Uključi
         </button>
       </div>
     </div>

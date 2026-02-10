@@ -18,11 +18,11 @@ export function useBooking() {
     try {
       await runTransaction(db, async (transaction) => {
         const sessionSnap = await transaction.get(sessionRef);
-        if (!sessionSnap.exists()) throw new Error('Session not found');
+        if (!sessionSnap.exists()) throw new Error('Trening nije pronađen');
 
         const sessionData = sessionSnap.data();
-        if (sessionData.status === 'cancelled') throw new Error('Session is cancelled');
-        if (sessionData.bookingCount >= sessionData.maxCapacity) throw new Error('Session is full');
+        if (sessionData.status === 'cancelled') throw new Error('Trening je otkazan');
+        if (sessionData.bookingCount >= sessionData.maxCapacity) throw new Error('Trening je popunjen');
 
         const booking: Omit<Booking, 'id'> = {
           userId: user.uid,
@@ -47,16 +47,16 @@ export function useBooking() {
       await addDoc(collection(db, 'notifications'), {
         userId: user.uid,
         type: 'booking_confirmed',
-        title: 'Booking Confirmed',
-        message: `Your ${session.startTime} session on ${session.date} is booked!`,
+        title: 'Rezervacija potvrđena',
+        message: `Vaš trening u ${session.startTime} dana ${session.date} je rezervisan!`,
         read: false,
         relatedSessionId: session.id,
         createdAt: new Date().toISOString(),
       });
 
-      addToast('Session booked successfully!', 'success');
+      addToast('Trening uspješno rezervisan!', 'success');
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to book session';
+      const message = err instanceof Error ? err.message : 'Rezervacija nije uspjela';
       addToast(message, 'error');
     }
   };
@@ -72,7 +72,7 @@ export function useBooking() {
 
       await runTransaction(db, async (transaction) => {
         const sessionSnap = await transaction.get(sessionRef);
-        if (!sessionSnap.exists()) throw new Error('Session not found');
+        if (!sessionSnap.exists()) throw new Error('Trening nije pronađen');
 
         const sessionData = sessionSnap.data();
         wasAtCapacity = sessionData.bookingCount >= sessionData.maxCapacity;
@@ -88,17 +88,17 @@ export function useBooking() {
         await addDoc(collection(db, 'notifications'), {
           userId: 'all',
           type: 'spot_available',
-          title: 'Spot Available',
-          message: `A spot opened up for the ${booking.sessionStartTime} session on ${booking.sessionDate}!`,
+          title: 'Mjesto slobodno',
+          message: `Oslobodilo se mjesto za trening u ${booking.sessionStartTime} dana ${booking.sessionDate}!`,
           read: false,
           relatedSessionId: booking.sessionId,
           createdAt: new Date().toISOString(),
         });
       }
 
-      addToast('Booking cancelled', 'info');
+      addToast('Rezervacija otkazana', 'info');
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to cancel booking';
+      const message = err instanceof Error ? err.message : 'Otkazivanje rezervacije nije uspjelo';
       addToast(message, 'error');
     }
   };

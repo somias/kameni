@@ -62,7 +62,7 @@ export default function MyBookings() {
   }, [user]);
 
   const handleCancel = async (booking: Booking) => {
-    if (!window.confirm('Cancel this booking?')) return;
+    if (!window.confirm('Otkazati ovu rezervaciju?')) return;
     setCancellingId(booking.id);
     await cancelBooking(booking);
     await loadBookings();
@@ -71,18 +71,18 @@ export default function MyBookings() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">My Bookings</h1>
+      <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Moje rezervacije</h1>
 
       {loading ? (
         <LoadingSkeleton count={3} />
       ) : bookings.length === 0 ? (
         <div className="text-center py-12 text-gray-400 dark:text-gray-500">
-          <p className="text-lg font-medium">No upcoming bookings</p>
+          <p className="text-lg font-medium">Nema predstojećih rezervacija</p>
           <p className="text-sm mt-1">
             <Link to="/schedule" className="text-red-600 dark:text-red-500 hover:underline">
-              Browse the schedule
+              Pregledajte raspored
             </Link>{' '}
-            to book a session
+            da rezervišete trening
           </p>
         </div>
       ) : (
@@ -112,7 +112,7 @@ export default function MyBookings() {
                   <div>
                     {isSessionCancelled ? (
                       <span className="inline-block px-3 py-1 text-xs font-medium bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-full">
-                        Cancelled by coach
+                        Otkazao trener
                       </span>
                     ) : (
                       <button
@@ -120,7 +120,7 @@ export default function MyBookings() {
                         disabled={isCancelling}
                         className="px-4 py-1.5 text-sm font-medium border border-red-200 dark:border-red-800 text-red-600 dark:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-colors disabled:opacity-50"
                       >
-                        {isCancelling ? '...' : 'Cancel'}
+                        {isCancelling ? '...' : 'Otkaži'}
                       </button>
                     )}
                   </div>

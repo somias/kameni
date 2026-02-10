@@ -108,7 +108,7 @@ export default function WeeklySchedule() {
   };
 
   const handleCancel = async (booking: Booking) => {
-    if (!window.confirm('Cancel this booking?')) return;
+    if (!window.confirm('Otkazati ovu rezervaciju?')) return;
     setBookingInProgress(booking.sessionId);
     await cancelBooking(booking);
     await loadUserBookings(sessions);
@@ -163,7 +163,7 @@ export default function WeeklySchedule() {
         <button
           onClick={prevWeek}
           className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-          aria-label="Previous week"
+          aria-label="Prethodna sedmica"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -179,7 +179,7 @@ export default function WeeklySchedule() {
               onClick={thisWeek}
               className="text-xs text-red-600 dark:text-red-500 hover:underline mt-0.5"
             >
-              Back to this week
+              Nazad na ovu sedmicu
             </button>
           )}
         </div>
@@ -187,7 +187,7 @@ export default function WeeklySchedule() {
         <button
           onClick={nextWeek}
           className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-          aria-label="Next week"
+          aria-label="Sljedeća sedmica"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -199,8 +199,8 @@ export default function WeeklySchedule() {
         <LoadingSkeleton count={4} />
       ) : sessions.length === 0 ? (
         <div className="text-center py-12 text-gray-400 dark:text-gray-500">
-          <p className="text-lg font-medium">No sessions this week</p>
-          <p className="text-sm mt-1">Check back later or try another week</p>
+          <p className="text-lg font-medium">Nema treninga ove sedmice</p>
+          <p className="text-sm mt-1">Provjerite ponovo kasnije ili probajte drugu sedmicu</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -244,11 +244,11 @@ export default function WeeklySchedule() {
                           <div className="text-right">
                             {isCancelled ? (
                               <span className="inline-block px-3 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-full">
-                                Cancelled
+                                Otkazano
                               </span>
                             ) : isPast ? (
                               <span className="inline-block px-3 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-full">
-                                Past
+                                Prošlo
                               </span>
                             ) : isCoach ? null : booking ? (
                               <button
@@ -256,11 +256,11 @@ export default function WeeklySchedule() {
                                 disabled={isProcessing}
                                 className="px-4 py-1.5 text-sm font-medium border border-red-200 dark:border-red-800 text-red-600 dark:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-colors disabled:opacity-50"
                               >
-                                {isProcessing ? '...' : 'Cancel'}
+                                {isProcessing ? '...' : 'Otkaži'}
                               </button>
                             ) : isFull ? (
                               <span className="inline-block px-3 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-full">
-                                Full
+                                Popunjeno
                               </span>
                             ) : (
                               <button
@@ -268,7 +268,7 @@ export default function WeeklySchedule() {
                                 disabled={isProcessing}
                                 className="px-4 py-1.5 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
                               >
-                                {isProcessing ? '...' : 'Book'}
+                                {isProcessing ? '...' : 'Rezerviši'}
                               </button>
                             )}
                           </div>
@@ -278,8 +278,8 @@ export default function WeeklySchedule() {
                         {!isCancelled && (
                           <div className="mt-3">
                             <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-                              <span>{session.bookingCount} / {session.maxCapacity} booked</span>
-                              <span>{spotsLeft} spot{spotsLeft !== 1 ? 's' : ''} left</span>
+                              <span>{session.bookingCount} / {session.maxCapacity} rezervisano</span>
+                              <span>Preostalo: {spotsLeft}</span>
                             </div>
                             <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5">
                               <div

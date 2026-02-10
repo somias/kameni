@@ -116,20 +116,20 @@ export default function CoachDashboard() {
         await addDoc(collection(db, 'notifications'), {
           userId: booking.userId,
           type: 'session_cancelled',
-          title: 'Session Cancelled',
-          message: `The ${formatTime(cancelModal.startTime)} session on ${formatDate(cancelModal.date)} has been cancelled.${cancelNote ? ` Note: ${cancelNote}` : ''}`,
+          title: 'Trening otkazan',
+          message: `Trening u ${formatTime(cancelModal.startTime)} dana ${formatDate(cancelModal.date)} je otkazan.${cancelNote ? ` Napomena: ${cancelNote}` : ''}`,
           read: false,
           relatedSessionId: cancelModal.id,
           createdAt: new Date().toISOString(),
         });
       }
 
-      addToast('Session cancelled', 'info');
+      addToast('Trening otkazan', 'info');
       setCancelModal(null);
       setCancelNote('');
       await loadData();
     } catch {
-      addToast('Failed to cancel session', 'error');
+      addToast('Otkazivanje treninga nije uspjelo', 'error');
     }
   };
 
@@ -153,19 +153,19 @@ export default function CoachDashboard() {
         await addDoc(collection(db, 'notifications'), {
           userId: booking.userId,
           type: 'session_time_changed',
-          title: 'Session Time Changed',
-          message: `The session on ${formatDate(editTimeSession.date)} has been moved to ${formatTime(editStartTime)} – ${formatTime(editEndTime)}.`,
+          title: 'Vrijeme treninga promijenjeno',
+          message: `Trening dana ${formatDate(editTimeSession.date)} je pomjeren na ${formatTime(editStartTime)} – ${formatTime(editEndTime)}.`,
           read: false,
           relatedSessionId: editTimeSession.id,
           createdAt: new Date().toISOString(),
         });
       }
 
-      addToast('Session time updated', 'success');
+      addToast('Vrijeme treninga ažurirano', 'success');
       setEditTimeSession(null);
       await loadData();
     } catch {
-      addToast('Failed to update session time', 'error');
+      addToast('Ažuriranje vremena nije uspjelo', 'error');
     }
   };
 
@@ -182,7 +182,7 @@ export default function CoachDashboard() {
       await addDoc(collection(db, 'notifications'), {
         userId: 'all',
         type: 'announcement',
-        title: 'New Announcement',
+        title: 'Novo obavještenje',
         message: announcement.trim(),
         read: false,
         createdAt: new Date().toISOString(),
@@ -194,9 +194,9 @@ export default function CoachDashboard() {
         postedAt: new Date().toISOString(),
       });
       setAnnouncement('');
-      addToast('Announcement posted', 'success');
+      addToast('Obavještenje objavljeno', 'success');
     } catch {
-      addToast('Failed to post announcement', 'error');
+      addToast('Objavljivanje obavještenja nije uspjelo', 'error');
     }
   };
 
@@ -204,9 +204,9 @@ export default function CoachDashboard() {
     try {
       await updateDoc(doc(db, 'announcements', 'current'), { message: deleteField(), postedBy: deleteField(), postedAt: deleteField() });
       setCurrentAnnouncement(null);
-      addToast('Announcement cleared', 'info');
+      addToast('Obavještenje uklonjeno', 'info');
     } catch {
-      addToast('Failed to clear announcement', 'error');
+      addToast('Uklanjanje obavještenja nije uspjelo', 'error');
     }
   };
 
@@ -233,28 +233,28 @@ export default function CoachDashboard() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Coach Dashboard</h1>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Trenerska tabla</h1>
         <Link
           to="/coach/slots"
           className="text-sm text-red-600 dark:text-red-500 hover:underline font-medium"
         >
-          Manage Slots
+          Upravljaj terminima
         </Link>
       </div>
 
       {/* Announcement section */}
       <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6">
-        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Announcements</h2>
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Obavještenja</h2>
         {currentAnnouncement && (
           <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-3">
             <p className="text-sm text-red-800 dark:text-red-300">{currentAnnouncement.message}</p>
             <div className="flex items-center justify-between mt-2">
-              <p className="text-xs text-red-500">By {currentAnnouncement.postedBy}</p>
+              <p className="text-xs text-red-500">Objavio {currentAnnouncement.postedBy}</p>
               <button
                 onClick={handleClearAnnouncement}
                 className="text-xs text-red-600 dark:text-red-500 hover:underline"
               >
-                Clear
+                Ukloni
               </button>
             </div>
           </div>
@@ -264,7 +264,7 @@ export default function CoachDashboard() {
             type="text"
             value={announcement}
             onChange={(e) => setAnnouncement(e.target.value)}
-            placeholder="Type an announcement..."
+            placeholder="Unesite obavještenje..."
             className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
           <button
@@ -272,7 +272,7 @@ export default function CoachDashboard() {
             disabled={!announcement.trim()}
             className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
           >
-            Post
+            Objavi
           </button>
         </div>
       </div>
@@ -298,9 +298,9 @@ export default function CoachDashboard() {
         <LoadingSkeleton count={4} />
       ) : sessions.length === 0 ? (
         <div className="text-center py-12 text-gray-400 dark:text-gray-500">
-          <p className="text-lg font-medium">No sessions this week</p>
+          <p className="text-lg font-medium">Nema treninga ove sedmice</p>
           <p className="text-sm mt-1">
-            <Link to="/coach/slots" className="text-red-600 dark:text-red-500 hover:underline">Create slots</Link> first
+            Prvo <Link to="/coach/slots" className="text-red-600 dark:text-red-500 hover:underline">kreirajte termine</Link>
           </p>
         </div>
       ) : (
@@ -332,7 +332,7 @@ export default function CoachDashboard() {
                         {session.bookingCount}/{session.maxCapacity}
                       </p>
                       {session.status === 'cancelled' && (
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Cancelled</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Otkazano</span>
                       )}
                     </div>
                     <svg
@@ -348,11 +348,11 @@ export default function CoachDashboard() {
                   <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                     {/* Attendee list */}
                     {sessionBookings.length === 0 ? (
-                      <p className="text-sm text-gray-400 dark:text-gray-500">No bookings yet</p>
+                      <p className="text-sm text-gray-400 dark:text-gray-500">Još nema rezervacija</p>
                     ) : (
                       <div>
                         <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">
-                          Attendees ({sessionBookings.length})
+                          Polaznici ({sessionBookings.length})
                         </p>
                         <div className="space-y-1">
                           {sessionBookings.map((booking) => (
@@ -379,7 +379,7 @@ export default function CoachDashboard() {
                           }}
                           className="flex-1 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                         >
-                          Edit Time
+                          Promijeni vrijeme
                         </button>
                         <button
                           onClick={(e) => {
@@ -388,7 +388,7 @@ export default function CoachDashboard() {
                           }}
                           className="flex-1 py-2 text-sm font-medium text-red-600 dark:text-red-500 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
                         >
-                          Cancel Session
+                          Otkaži trening
                         </button>
                       </div>
                     )}
@@ -404,15 +404,15 @@ export default function CoachDashboard() {
       {cancelModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-900 rounded-xl p-6 w-full max-w-sm">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Cancel Session</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Otkaži trening</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-              Cancel the {formatTime(cancelModal.startTime)} session on {formatDate(cancelModal.date)}?
-              Booked members will be notified.
+              Otkazati trening u {formatTime(cancelModal.startTime)} dana {formatDate(cancelModal.date)}?
+              Prijavljeni članovi će biti obaviješteni.
             </p>
             <textarea
               value={cancelNote}
               onChange={(e) => setCancelNote(e.target.value)}
-              placeholder="Reason (optional)"
+              placeholder="Razlog (opciono)"
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent mb-4"
               rows={3}
             />
@@ -421,13 +421,13 @@ export default function CoachDashboard() {
                 onClick={() => { setCancelModal(null); setCancelNote(''); }}
                 className="flex-1 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
-                Keep
+                Zadrži
               </button>
               <button
                 onClick={handleCancelSession}
                 className="flex-1 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
-                Cancel Session
+                Otkaži trening
               </button>
             </div>
           </div>
@@ -438,13 +438,13 @@ export default function CoachDashboard() {
       {editTimeSession && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-900 rounded-xl p-6 w-full max-w-sm">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Edit Session Time</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Promijeni vrijeme treninga</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-              Change time for {formatDate(editTimeSession.date)}. Booked members will be notified.
+              Promijenite vrijeme za {formatDate(editTimeSession.date)}. Prijavljeni članovi će biti obaviješteni.
             </p>
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Početak</label>
                 <input
                   type="time"
                   value={editStartTime}
@@ -453,7 +453,7 @@ export default function CoachDashboard() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Kraj</label>
                 <input
                   type="time"
                   value={editEndTime}
@@ -467,13 +467,13 @@ export default function CoachDashboard() {
                 onClick={() => setEditTimeSession(null)}
                 className="flex-1 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
-                Cancel
+                Odustani
               </button>
               <button
                 onClick={handleSaveTime}
                 className="flex-1 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
-                Save
+                Sačuvaj
               </button>
             </div>
           </div>

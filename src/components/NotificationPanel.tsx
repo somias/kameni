@@ -35,13 +35,13 @@ export default function NotificationPanel({ onClose }: Props) {
       {/* Panel */}
       <div className="fixed md:absolute md:right-4 md:top-14 inset-0 md:inset-auto md:w-96 md:max-h-[70vh] bg-white dark:bg-gray-900 md:rounded-xl md:shadow-xl z-50 flex flex-col border border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="font-semibold text-gray-900 dark:text-gray-100">Notifications</h2>
+          <h2 className="font-semibold text-gray-900 dark:text-gray-100">Obavještenja</h2>
           <div className="flex items-center gap-3">
             <button
               onClick={markAllAsRead}
               className="text-xs text-red-600 dark:text-red-500 hover:underline"
             >
-              Mark all as read
+              Označi sve kao pročitano
             </button>
             <button onClick={onClose} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 md:hidden">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -53,7 +53,7 @@ export default function NotificationPanel({ onClose }: Props) {
 
         <div className="flex-1 overflow-y-auto">
           {notifications.length === 0 ? (
-            <p className="p-6 text-center text-sm text-gray-400 dark:text-gray-500">No notifications yet</p>
+            <p className="p-6 text-center text-sm text-gray-400 dark:text-gray-500">Još nema obavještenja</p>
           ) : (
             notifications.map((n) => (
               <button

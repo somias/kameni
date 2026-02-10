@@ -29,7 +29,8 @@ service cloud.firestore {
     match /sessions/{sessionId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();
-      allow update: if isCoach();
+      allow update: if isCoach()
+        || (isAuthenticated() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['bookingCount']));
     }
 
     match /bookings/{bookingId} {

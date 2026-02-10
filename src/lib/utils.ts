@@ -1,5 +1,5 @@
-export const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-export const dayNamesShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+export const dayNames = ['Nedjelja', 'Ponedeljak', 'Utorak', 'Srijeda', 'Četvrtak', 'Petak', 'Subota'];
+export const dayNamesShort = ['Ned', 'Pon', 'Uto', 'Sri', 'Čet', 'Pet', 'Sub'];
 
 export function getWeekStart(date: Date = new Date()): Date {
   const d = new Date(date);
@@ -30,7 +30,7 @@ export function toISODate(date: Date): string {
 export function formatDate(dateStr: string): string {
   const [year, month, day] = dateStr.split('-').map(Number);
   const date = new Date(year, month - 1, day);
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString('sr-Latn', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
@@ -39,9 +39,7 @@ export function formatDate(dateStr: string): string {
 
 export function formatTime(time: string): string {
   const [h, m] = time.split(':').map(Number);
-  const period = h >= 12 ? 'PM' : 'AM';
-  const hour = h % 12 || 12;
-  return `${hour}:${String(m).padStart(2, '0')} ${period}`;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
 export function timeAgo(dateStr: string): string {
@@ -49,10 +47,10 @@ export function timeAgo(dateStr: string): string {
   const then = new Date(dateStr).getTime();
   const diff = now - then;
   const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return 'just now';
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 1) return 'upravo';
+  if (minutes < 60) return `prije ${minutes}m`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return `prije ${hours}h`;
   const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  return `prije ${days}d`;
 }

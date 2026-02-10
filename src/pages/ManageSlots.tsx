@@ -57,7 +57,7 @@ export default function ManageSlots() {
           location: DEFAULT_LOCATION,
           maxCapacity: form.maxCapacity,
         });
-        addToast('Slot updated', 'success');
+        addToast('Termin ažuriran', 'success');
       } else {
         await addDoc(collection(db, 'slots'), {
           ...form,
@@ -65,14 +65,14 @@ export default function ManageSlots() {
           active: true,
           createdAt: new Date().toISOString(),
         });
-        addToast('Slot created', 'success');
+        addToast('Termin kreiran', 'success');
       }
       setForm(defaultSlot);
       setShowForm(false);
       setEditingId(null);
       await loadSlots();
     } catch {
-      addToast('Failed to save slot', 'error');
+      addToast('Čuvanje termina nije uspjelo', 'error');
     }
   };
 
@@ -91,9 +91,9 @@ export default function ManageSlots() {
     try {
       await updateDoc(doc(db, 'slots', slot.id), { active: !slot.active });
       await loadSlots();
-      addToast(slot.active ? 'Slot deactivated' : 'Slot activated', 'info');
+      addToast(slot.active ? 'Termin deaktiviran' : 'Termin aktiviran', 'info');
     } catch {
-      addToast('Failed to update slot', 'error');
+      addToast('Ažuriranje termina nije uspjelo', 'error');
     }
   };
 
@@ -107,7 +107,7 @@ export default function ManageSlots() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Manage Slots</h1>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Upravljanje terminima</h1>
         <button
           onClick={() => {
             setForm(defaultSlot);
@@ -116,7 +116,7 @@ export default function ManageSlots() {
           }}
           className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
         >
-          {showForm ? 'Cancel' : 'Add Slot'}
+          {showForm ? 'Odustani' : 'Dodaj termin'}
         </button>
       </div>
 
@@ -124,12 +124,12 @@ export default function ManageSlots() {
       {showForm && (
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6 space-y-4">
           <h2 className="font-semibold text-gray-900 dark:text-gray-100">
-            {editingId ? 'Edit Slot' : 'New Slot'}
+            {editingId ? 'Izmijeni termin' : 'Novi termin'}
           </h2>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Day</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Dan</label>
               <select
                 value={form.dayOfWeek}
                 onChange={(e) => setForm({ ...form, dayOfWeek: Number(e.target.value) })}
@@ -142,7 +142,7 @@ export default function ManageSlots() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Max Capacity</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Maks. kapacitet</label>
               <input
                 type="number"
                 min={1}
@@ -153,7 +153,7 @@ export default function ManageSlots() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Time</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Početak</label>
               <input
                 type="time"
                 value={form.startTime}
@@ -163,7 +163,7 @@ export default function ManageSlots() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Time</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Kraj</label>
               <input
                 type="time"
                 value={form.endTime}
@@ -177,7 +177,7 @@ export default function ManageSlots() {
             onClick={handleSubmit}
             className="w-full py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
           >
-            {editingId ? 'Save Changes' : 'Create Slot'}
+            {editingId ? 'Sačuvaj izmjene' : 'Kreiraj termin'}
           </button>
         </div>
       )}
@@ -194,8 +194,8 @@ export default function ManageSlots() {
         </div>
       ) : slots.length === 0 ? (
         <div className="text-center py-12 text-gray-400 dark:text-gray-500">
-          <p className="text-lg font-medium">No slots yet</p>
-          <p className="text-sm mt-1">Add your first recurring time slot</p>
+          <p className="text-lg font-medium">Još nema termina</p>
+          <p className="text-sm mt-1">Dodajte svoj prvi ponavljajući termin</p>
         </div>
       ) : (
         <div className="space-y-6">
@@ -221,7 +221,7 @@ export default function ManageSlots() {
                           {slot.startTime} – {slot.endTime}
                         </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {slot.maxCapacity} spots
+                          {slot.maxCapacity} mjesta
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -229,7 +229,7 @@ export default function ManageSlots() {
                           onClick={() => handleEdit(slot)}
                           className="px-3 py-1 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                         >
-                          Edit
+                          Izmijeni
                         </button>
                         <button
                           onClick={() => handleToggleActive(slot)}
@@ -239,7 +239,7 @@ export default function ManageSlots() {
                               : 'text-green-600 dark:text-green-500 border border-green-200 dark:border-green-800 hover:bg-green-50 dark:hover:bg-green-950'
                           }`}
                         >
-                          {slot.active ? 'Deactivate' : 'Activate'}
+                          {slot.active ? 'Deaktiviraj' : 'Aktiviraj'}
                         </button>
                       </div>
                     </div>

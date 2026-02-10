@@ -13,16 +13,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const isCoach = userData?.role === 'coach';
 
   const navItems = [
-    { to: '/schedule', label: 'Schedule', icon: CalendarIcon },
-    { to: '/my-bookings', label: 'Bookings', icon: BookmarkIcon },
+    { to: '/schedule', label: 'Raspored', icon: CalendarIcon },
+    { to: '/my-bookings', label: 'Rezervacije', icon: BookmarkIcon },
     ...(isCoach
       ? [
-          { to: '/coach', label: 'Dashboard', icon: ChartIcon },
-          { to: '/coach/slots', label: 'Manage Slots', icon: SlotsIcon },
-          { to: '/coach/members', label: 'Members', icon: MembersIcon },
+          { to: '/coach', label: 'Tabla', icon: ChartIcon },
+          { to: '/coach/slots', label: 'Termini', icon: SlotsIcon },
+          { to: '/coach/members', label: 'Članovi', icon: MembersIcon },
         ]
       : []),
-    { to: '/settings', label: 'Settings', icon: GearIcon },
+    { to: '/settings', label: 'Postavke', icon: GearIcon },
   ];
 
   // Exact match for /coach to avoid both /coach and /coach/slots highlighting
@@ -45,7 +45,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <button
               onClick={() => setShowNotifications(!showNotifications)}
               className="relative p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
-              aria-label="Notifications"
+              aria-label="Obavještenja"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
@@ -65,7 +65,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               onClick={signOut}
               className="hidden md:block text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
             >
-              Sign out
+              Odjavi se
             </button>
           </div>
         </div>
@@ -123,19 +123,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <button
             onClick={() => setSidebarOpen(false)}
             className="mt-auto flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            aria-label="Collapse sidebar"
+            aria-label="Skupi bočnu traku"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
             </svg>
-            Collapse
+            Skupi
           </button>
         </nav>
       ) : (
         <button
           onClick={() => setSidebarOpen(true)}
           className="hidden md:flex fixed left-0 top-14 bottom-0 z-30 w-10 items-center justify-center bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-          aria-label="Expand sidebar"
+          aria-label="Proširi bočnu traku"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />

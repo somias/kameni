@@ -17,14 +17,14 @@ export default function RegisterPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (password.length < 6) {
-      addToast('Password must be at least 6 characters', 'error');
+      addToast('Lozinka mora imati najmanje 6 karaktera', 'error');
       return;
     }
     setSubmitting(true);
     try {
       await signUp(name, email, password);
     } catch {
-      addToast('Registration failed. Email may already be in use.', 'error');
+      addToast('Registracija nije uspjela. Email je možda već u upotrebi.', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -35,12 +35,12 @@ export default function RegisterPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-red-600 dark:text-red-500">Boxing Cardio</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Create your account</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Kreirajte svoj nalog</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ime i prezime</label>
             <input
               id="name"
               type="text"
@@ -48,12 +48,12 @@ export default function RegisterPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              placeholder="John Doe"
+              placeholder="Marko Marković"
             />
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">E-mail</label>
             <input
               id="email"
               type="email"
@@ -66,7 +66,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Lozinka</label>
             <input
               id="password"
               type="password"
@@ -83,13 +83,13 @@ export default function RegisterPage() {
             disabled={submitting}
             className="w-full bg-red-600 text-white py-2.5 rounded-lg font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-950 disabled:opacity-50 transition-colors"
           >
-            {submitting ? 'Creating account...' : 'Create Account'}
+            {submitting ? 'Kreiranje naloga...' : 'Kreiraj nalog'}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
-          Already have an account?{' '}
-          <Link to="/login" className="text-red-600 dark:text-red-500 font-medium hover:underline">Sign In</Link>
+          Već imate nalog?{' '}
+          <Link to="/login" className="text-red-600 dark:text-red-500 font-medium hover:underline">Prijavite se</Link>
         </p>
       </div>
     </div>

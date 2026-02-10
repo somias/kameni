@@ -6,9 +6,9 @@ import { requestNotificationPermission, disableNotifications } from '../lib/mess
 
 type ThemeOption = 'light' | 'system' | 'dark';
 const themeOptions: { value: ThemeOption; label: string }[] = [
-  { value: 'light', label: 'Light' },
-  { value: 'system', label: 'System' },
-  { value: 'dark', label: 'Dark' },
+  { value: 'light', label: 'Svijetlo' },
+  { value: 'system', label: 'Sistem' },
+  { value: 'dark', label: 'Tamno' },
 ];
 
 export default function SettingsPage() {
@@ -23,18 +23,18 @@ export default function SettingsPage() {
     try {
       if (userData.notificationsEnabled) {
         await disableNotifications(user.uid);
-        addToast('Notifications disabled', 'info');
+        addToast('Obavještenja isključena', 'info');
       } else {
         const success = await requestNotificationPermission(user.uid);
         if (success) {
-          addToast('Notifications enabled!', 'success');
+          addToast('Obavještenja uključena!', 'success');
         } else {
-          addToast('Could not enable notifications', 'error');
+          addToast('Nije moguće uključiti obavještenja', 'error');
         }
       }
       await refreshUser();
     } catch {
-      addToast('Failed to update notification settings', 'error');
+      addToast('Ažuriranje postavki obavještenja nije uspjelo', 'error');
     } finally {
       setToggling(false);
     }
@@ -42,15 +42,15 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Settings</h1>
+      <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Postavke</h1>
 
       <div className="space-y-4">
         {/* Profile info */}
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Profile</h2>
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Profil</h2>
           <div className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-sm text-gray-500 dark:text-gray-400">Name</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">Ime</span>
               <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{userData?.displayName}</span>
             </div>
             <div className="flex justify-between">
@@ -58,15 +58,15 @@ export default function SettingsPage() {
               <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{userData?.email}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-gray-500 dark:text-gray-400">Role</span>
-              <span className="text-sm font-medium text-gray-900 dark:text-gray-100 capitalize">{userData?.role}</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">Uloga</span>
+              <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{userData?.role === 'coach' ? 'Trener' : 'Član'}</span>
             </div>
           </div>
         </div>
 
         {/* Appearance */}
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Appearance</h2>
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Izgled</h2>
           <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             {themeOptions.map((opt) => (
               <button
@@ -86,11 +86,11 @@ export default function SettingsPage() {
 
         {/* Notifications */}
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Notifications</h2>
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Obavještenja</h2>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-900 dark:text-gray-100">Push Notifications</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Get reminders and booking updates</p>
+              <p className="text-sm text-gray-900 dark:text-gray-100">Push obavještenja</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Primajte podsjetnike i ažuriranja rezervacija</p>
             </div>
             <button
               onClick={handleToggleNotifications}
@@ -113,7 +113,7 @@ export default function SettingsPage() {
           onClick={signOut}
           className="w-full py-3 text-sm font-medium text-red-600 dark:text-red-500 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
         >
-          Sign Out
+          Odjavi se
         </button>
       </div>
     </div>
