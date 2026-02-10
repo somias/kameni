@@ -128,12 +128,12 @@ export const onSessionCancelled = onDocumentUpdated(
 
     const startTime = after.startTime || "";
     const date = after.date || "";
-    const cancelNote = after.cancelNote ? ` Note: ${after.cancelNote}` : "";
+    const cancelNote = after.cancelNote ? ` Napomena: ${after.cancelNote}` : "";
 
     await sendPush(
       subscriptions,
-      "Session Cancelled",
-      `The ${startTime} session on ${date} has been cancelled.${cancelNote}`,
+      "Trening otkazan",
+      `Trening u ${startTime} dana ${date} je otkazan.${cancelNote}`,
       userSubMap
     );
   }
@@ -167,7 +167,7 @@ export const onAnnouncementCreated = onDocumentWritten(
       }
     }
 
-    await sendPush(subscriptions, "New Announcement", after.message, userSubMap);
+    await sendPush(subscriptions, "Novo obavještenje", after.message, userSubMap);
   }
 );
 
@@ -181,7 +181,7 @@ export const onBookingCreated = onDocumentCreated(
     const data = event.data?.data();
     if (!data || data.status !== "confirmed") return;
 
-    const userName = data.userName || "A member";
+    const userName = data.userName || "Član";
     const sessionDate = data.sessionDate || "";
     const startTime = data.sessionStartTime || "";
 
@@ -192,8 +192,8 @@ export const onBookingCreated = onDocumentCreated(
 
     if (coachSnap.empty) return;
 
-    const title = "New Booking";
-    const message = `${userName} booked the ${startTime} session on ${sessionDate}.`;
+    const title = "Nova rezervacija";
+    const message = `${userName} je rezervisao trening u ${startTime} dana ${sessionDate}.`;
 
     for (const coachDoc of coachSnap.docs) {
       const coachData = coachDoc.data();
@@ -233,7 +233,7 @@ export const onBookingCancelled = onDocumentUpdated(
     if (!before || !after) return;
     if (before.status === "cancelled" || after.status !== "cancelled") return;
 
-    const userName = after.userName || "A member";
+    const userName = after.userName || "Član";
     const sessionDate = after.sessionDate || "";
     const startTime = after.sessionStartTime || "";
 
@@ -244,8 +244,8 @@ export const onBookingCancelled = onDocumentUpdated(
 
     if (coachSnap.empty) return;
 
-    const title = "Booking Cancelled";
-    const message = `${userName} cancelled their ${startTime} session on ${sessionDate}.`;
+    const title = "Rezervacija otkazana";
+    const message = `${userName} je otkazao trening u ${startTime} dana ${sessionDate}.`;
 
     for (const coachDoc of coachSnap.docs) {
       const coachData = coachDoc.data();
@@ -307,8 +307,8 @@ export const onBookingReminder = onSchedule(
         await db.collection("notifications").add({
           userId,
           type: "reminder",
-          title: "Session Today",
-          message: `Your ${sessionData.startTime} boxing cardio session is today!`,
+          title: "Trening danas",
+          message: `Vaš Boxing Cardio trening u ${sessionData.startTime} je danas!`,
           read: false,
           relatedSessionId: sessionDoc.id,
           createdAt: new Date().toISOString(),
@@ -324,8 +324,8 @@ export const onBookingReminder = onSchedule(
           reminderSubMap.set(userId, userData.pushSubscriptions);
           await sendPush(
             userData.pushSubscriptions,
-            "Session Today",
-            `Your ${sessionData.startTime} boxing cardio session is today!`,
+            "Trening danas",
+            `Vaš Boxing Cardio trening u ${sessionData.startTime} je danas!`,
             reminderSubMap
           );
         }

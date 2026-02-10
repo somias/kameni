@@ -43,10 +43,14 @@ admin.initializeApp();
 const db = admin.firestore();
 const vapidPrivateKey = (0, params_1.defineSecret)("VAPID_PRIVATE_KEY");
 const VAPID_PUBLIC_KEY = "BLHeT0sFe02Vv-_7zpg7UVU2B896LYWb9UpaJpvQ-jVrRnlSbhuxTSlkClYIO_AIa8N33KjzmlrkFcbb-ConpEE";
+let webPushInitialized = false;
 function initWebPush() {
+    if (webPushInitialized)
+        return;
     webpush.setVapidDetails("mailto:admin@kamenko.web.app", VAPID_PUBLIC_KEY, vapidPrivateKey.value());
+    webPushInitialized = true;
 }
-async function sendPush(subscriptions, title, body) {
+async function sendPush(subscriptions, title, body, userSubMap) {
     if (subscriptions.length === 0)
         return;
     initWebPush();
@@ -58,6 +62,29 @@ async function sendPush(subscriptions, title, body) {
     const success = results.filter((r) => r.status === "fulfilled").length;
     const failed = results.filter((r) => r.status === "rejected").length;
     console.log(`Push sent: ${success} success, ${failed} failure`);
+    // Clean up stale subscriptions (410 Gone or 404 Not Found)
+    if (userSubMap) {
+        const staleEndpoints = new Set();
+        results.forEach((result, index) => {
+            var _a;
+            if (result.status === "rejected" &&
+                ((_a = result.reason) === null || _a === void 0 ? void 0 : _a.statusCode) &&
+                (result.reason.statusCode === 410 || result.reason.statusCode === 404)) {
+                staleEndpoints.add(subscriptions[index].endpoint);
+            }
+        });
+        if (staleEndpoints.size > 0) {
+            console.log(`Removing ${staleEndpoints.size} stale push subscriptions`);
+            for (const [userId, userSubs] of userSubMap) {
+                const validSubs = userSubs.filter((sub) => !staleEndpoints.has(sub.endpoint));
+                if (validSubs.length < userSubs.length) {
+                    await db.collection("users").doc(userId).update({
+                        pushSubscriptions: validSubs,
+                    });
+                }
+            }
+        }
+    }
 }
 // Trigger: When a session status changes to 'cancelled'
 exports.onSessionCancelled = (0, firestore_1.onDocumentUpdated)({
@@ -80,6 +107,7 @@ exports.onSessionCancelled = (0, firestore_1.onDocumentUpdated)({
     if (bookingsSnap.empty)
         return;
     const subscriptions = [];
+    const userSubMap = new Map();
     for (const bookingDoc of bookingsSnap.docs) {
         const userId = bookingDoc.data().userId;
         const userSnap = await db.collection("users").doc(userId).get();
@@ -87,12 +115,13 @@ exports.onSessionCancelled = (0, firestore_1.onDocumentUpdated)({
         if ((userData === null || userData === void 0 ? void 0 : userData.notificationsEnabled) &&
             ((_c = userData === null || userData === void 0 ? void 0 : userData.pushSubscriptions) === null || _c === void 0 ? void 0 : _c.length) > 0) {
             subscriptions.push(...userData.pushSubscriptions);
+            userSubMap.set(userId, userData.pushSubscriptions);
         }
     }
     const startTime = after.startTime || "";
     const date = after.date || "";
-    const cancelNote = after.cancelNote ? ` Note: ${after.cancelNote}` : "";
-    await sendPush(subscriptions, "Session Cancelled", `The ${startTime} session on ${date} has been cancelled.${cancelNote}`);
+    const cancelNote = after.cancelNote ? ` Napomena: ${after.cancelNote}` : "";
+    await sendPush(subscriptions, "Trening otkazan", `Trening u ${startTime} dana ${date} je otkazan.${cancelNote}`, userSubMap);
 });
 // Trigger: When a new announcement is posted
 exports.onAnnouncementCreated = (0, firestore_1.onDocumentWritten)({
@@ -109,15 +138,17 @@ exports.onAnnouncementCreated = (0, firestore_1.onDocumentWritten)({
         .where("notificationsEnabled", "==", true)
         .get();
     const subscriptions = [];
+    const userSubMap = new Map();
     for (const userDoc of usersSnap.docs) {
         if (userDoc.id === postedByUid)
             continue;
         const userData = userDoc.data();
         if (((_b = userData.pushSubscriptions) === null || _b === void 0 ? void 0 : _b.length) > 0) {
             subscriptions.push(...userData.pushSubscriptions);
+            userSubMap.set(userDoc.id, userData.pushSubscriptions);
         }
     }
-    await sendPush(subscriptions, "New Announcement", after.message);
+    await sendPush(subscriptions, "Novo obavještenje", after.message, userSubMap);
 });
 // Trigger: When a new booking is created, notify the coach
 exports.onBookingCreated = (0, firestore_1.onDocumentCreated)({
@@ -128,7 +159,7 @@ exports.onBookingCreated = (0, firestore_1.onDocumentCreated)({
     const data = (_a = event.data) === null || _a === void 0 ? void 0 : _a.data();
     if (!data || data.status !== "confirmed")
         return;
-    const userName = data.userName || "A member";
+    const userName = data.userName || "Član";
     const sessionDate = data.sessionDate || "";
     const startTime = data.sessionStartTime || "";
     const coachSnap = await db
@@ -137,8 +168,8 @@ exports.onBookingCreated = (0, firestore_1.onDocumentCreated)({
         .get();
     if (coachSnap.empty)
         return;
-    const title = "New Booking";
-    const message = `${userName} booked the ${startTime} session on ${sessionDate}.`;
+    const title = "Nova rezervacija";
+    const message = `${userName} je rezervisao trening u ${startTime} dana ${sessionDate}.`;
     for (const coachDoc of coachSnap.docs) {
         const coachData = coachDoc.data();
         await db.collection("notifications").add({
@@ -152,7 +183,9 @@ exports.onBookingCreated = (0, firestore_1.onDocumentCreated)({
         });
         if (coachData.notificationsEnabled &&
             ((_b = coachData.pushSubscriptions) === null || _b === void 0 ? void 0 : _b.length) > 0) {
-            await sendPush(coachData.pushSubscriptions, title, message);
+            const coachSubMap = new Map();
+            coachSubMap.set(coachDoc.id, coachData.pushSubscriptions);
+            await sendPush(coachData.pushSubscriptions, title, message, coachSubMap);
         }
     }
 });
@@ -168,7 +201,7 @@ exports.onBookingCancelled = (0, firestore_1.onDocumentUpdated)({
         return;
     if (before.status === "cancelled" || after.status !== "cancelled")
         return;
-    const userName = after.userName || "A member";
+    const userName = after.userName || "Član";
     const sessionDate = after.sessionDate || "";
     const startTime = after.sessionStartTime || "";
     const coachSnap = await db
@@ -177,8 +210,8 @@ exports.onBookingCancelled = (0, firestore_1.onDocumentUpdated)({
         .get();
     if (coachSnap.empty)
         return;
-    const title = "Booking Cancelled";
-    const message = `${userName} cancelled their ${startTime} session on ${sessionDate}.`;
+    const title = "Rezervacija otkazana";
+    const message = `${userName} je otkazao trening u ${startTime} dana ${sessionDate}.`;
     for (const coachDoc of coachSnap.docs) {
         const coachData = coachDoc.data();
         await db.collection("notifications").add({
@@ -192,7 +225,9 @@ exports.onBookingCancelled = (0, firestore_1.onDocumentUpdated)({
         });
         if (coachData.notificationsEnabled &&
             ((_c = coachData.pushSubscriptions) === null || _c === void 0 ? void 0 : _c.length) > 0) {
-            await sendPush(coachData.pushSubscriptions, title, message);
+            const coachSubMap = new Map();
+            coachSubMap.set(coachDoc.id, coachData.pushSubscriptions);
+            await sendPush(coachData.pushSubscriptions, title, message, coachSubMap);
         }
     }
 });
@@ -225,8 +260,8 @@ exports.onBookingReminder = (0, scheduler_1.onSchedule)({
             await db.collection("notifications").add({
                 userId,
                 type: "reminder",
-                title: "Session Today",
-                message: `Your ${sessionData.startTime} boxing cardio session is today!`,
+                title: "Trening danas",
+                message: `Vaš Boxing Cardio trening u ${sessionData.startTime} je danas!`,
                 read: false,
                 relatedSessionId: sessionDoc.id,
                 createdAt: new Date().toISOString(),
@@ -235,7 +270,9 @@ exports.onBookingReminder = (0, scheduler_1.onSchedule)({
             const userData = userSnap.data();
             if ((userData === null || userData === void 0 ? void 0 : userData.notificationsEnabled) &&
                 ((_a = userData === null || userData === void 0 ? void 0 : userData.pushSubscriptions) === null || _a === void 0 ? void 0 : _a.length) > 0) {
-                await sendPush(userData.pushSubscriptions, "Session Today", `Your ${sessionData.startTime} boxing cardio session is today!`);
+                const reminderSubMap = new Map();
+                reminderSubMap.set(userId, userData.pushSubscriptions);
+                await sendPush(userData.pushSubscriptions, "Trening danas", `Vaš Boxing Cardio trening u ${sessionData.startTime} je danas!`, reminderSubMap);
             }
         }
     }
